@@ -1,9 +1,11 @@
 import requests
+import pandas as pd
 from requests.models import HTTPError
+
 
 #Get the data in CSV format
 
-#I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF
+# I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF
 def getStockInfo(ticker, apiKey):
     try:
         response = requests.get("""https://api.tdameritrade.com/v1/instruments?apikey="""+ apiKey +"""&symbol=""" + ticker +"""&projection=fundamental""")
@@ -12,7 +14,7 @@ def getStockInfo(ticker, apiKey):
     except Exception:
             print("Something Happened")
         
-    print(response.json())
+    print(pd.read_json(response.json(), 'split'))
 """
 Get the data you want
 Put it into the dataframe
