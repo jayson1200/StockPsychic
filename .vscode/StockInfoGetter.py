@@ -13,10 +13,11 @@ def getStockInfo(ticker, apiKey):
         print("We don't have your info")
     except Exception:
             print("Something Happened")
-        
-    print(pd.read_json(response.json(), 'split'))
+    
+    str = response.s
+    print(response.json(), 'split')
 """
-Get the data you want
+Get the data you want: Historical stuff, ema, sma, wma, rsi
 Put it into the dataframe
 make sure the price is always one period ahead
 and delete the info for the first and last periods
