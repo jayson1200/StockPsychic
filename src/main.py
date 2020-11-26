@@ -1,4 +1,5 @@
 import StockInfoGetter
+import pandas as df
 
 def main():
     
@@ -20,8 +21,8 @@ def main():
         }
     
     
-    StockInfoGetter.getStockInfo(apiKey=params["apiKey"], ticker= params["ticker"], periodType = params["periodType"], period = params["period"], frequencyType = params["frequencyType"])
-
+    stockInfoDF = StockInfoGetter.getStockInfo(apiKey=params["apiKey"], ticker= params["ticker"], periodType = params["periodType"], period = params["period"], frequencyType = params["frequencyType"])
+    stockInfoDF = StockInfoGetter.calculateRSIData(stockInfoDF)
 
 if __name__ == "__main__":
     main()
