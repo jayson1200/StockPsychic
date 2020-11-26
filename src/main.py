@@ -2,7 +2,7 @@ import StockInfoGetter
 
 def main():
     
-    if(input("Do you want to run a test") == "Yes" or "yes"):
+    if(str(input("Do you want to run a test ")) == ("yes" or "Yes")):
         params = {
         "apiKey": "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF",
         "ticker" : "AAPL",
@@ -12,11 +12,11 @@ def main():
         } 
     else:
         params = {
-        "apiKey": input("Can I have your TD Ameritrade API key"), 
-        "ticker" : input("Can I have the ticker symbol that you want"), 
-        "periodType" : input("What type of period: day, month, or year"), 
-        "period" : input("How many periods"), 
-        "frequencyType" : input("In what frequency: minute, daily, weekly, or monthly")
+        "apiKey": input("Can I have your TD Ameritrade API key "), 
+        "ticker" : input("Can I have the ticker symbol that you want "), 
+        "periodType" : input("What type of period: day, month, or year "), 
+        "period" : input("How many periods "), 
+        "frequencyType" : input("In what frequency: minute, daily, weekly, or monthly ")
         }
     
     

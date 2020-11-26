@@ -1,5 +1,5 @@
 import requests
-# import pandas as pd
+import pandas as pd
 from requests.models import HTTPError
 
 
@@ -11,16 +11,37 @@ def getStockInfo(**kwargs):
       response = requests.get(
         "https://api.tdameritrade.com/v1/marketdata/{}/pricehistory?apikey={}&periodType={}&period={}&frequencyType={}"
           .format(kwargs.get("ticker"), kwargs.get("apiKey"), kwargs.get("periodType"), kwargs.get("period"), kwargs.get("frequencyType")))
+
+      print(type(response.json()))
     except HTTPError:
         print("We don't have your info")
     except Exception:
             print("Something Happened")
     
+    data = response.json()
+
+    data.pop("symbol")
+    data.pop("empty")
+
+    dataCandleList = data["candles"]
+
     
-    print(response.json(), 'split')
+    stockInfoDF = pd.DataFrame(dataCandleList)
+    print(stockInfoDF)
+
+    return stockInfoDF
+
+def calculateRSIData(stockDF):
+    stockDF
+
+
+    
+
+
 """
 Get the data you want: Historical data
-MACD stuff, RSI
+MACD , 
+RSI: You will need to chop off the first 14 data points
 Volume
 Price
 
