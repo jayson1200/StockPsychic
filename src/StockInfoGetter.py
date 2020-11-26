@@ -78,7 +78,7 @@ def calculateRSIData(stockDF):
   stockDF.insert(8, "RSI", rsiList, True)
 
   #print(stockDF.tail(28))
-  # print(stockDF)
+  print(stockDF)
 
 
     

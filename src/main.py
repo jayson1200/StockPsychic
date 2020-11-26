@@ -1,8 +1,9 @@
 import StockInfoGetter
-import pandas as df
+import pandas as pd
 
 def main():
-    
+    print("\n You probably want to avoid minute because it has a lot periods where zero change happens, which might result in a division by 0 \n")
+
     if(str(input("Do you want to run a test ")) == ("yes" or "Yes")):
         params = {
         "apiKey": "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF",
