@@ -8,15 +8,15 @@ from requests.models import HTTPError
 # I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF
 def getStockInfo(**kwargs):
     try:
-      print("""https://api.tdameritrade.com/v1/instruments?apikey={}&symbol={}&projection=fundamental""".format(kwargs.get(apiKey, symbol)))
-      response = requests.get("""https://api.tdameritrade.com/v1/instruments?apikey={}&symbol={}&
-      projection=fundamental""".format(kwargs.get(apiKey, symbol)))
+      response = requests.get(
+        "https://api.tdameritrade.com/v1/marketdata/{}/pricehistory?apikey={}&periodType={}&period={}&frequencyType={}"
+          .format(kwargs.get("ticker"), kwargs.get("apiKey"), kwargs.get("periodType"), kwargs.get("period"), kwargs.get("frequencyType")))
     except HTTPError:
         print("We don't have your info")
     except Exception:
             print("Something Happened")
     
-    str = response.s
+    
     print(response.json(), 'split')
 """
 Get the data you want: Historical data
