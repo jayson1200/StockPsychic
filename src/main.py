@@ -7,9 +7,9 @@ def main():
         params = {
         "apiKey": "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF",
         "ticker" : "AAPL",
-        "periodType" : "day",
-        "period" : 10,
-        "frequencyType" : "minute"
+        "periodType" : "year",
+        "period" : 20,
+        "frequencyType" : "weekly"
         } 
     else:
         params = {
