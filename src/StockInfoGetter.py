@@ -177,7 +177,7 @@ def shiftClosePriceForFuture(stockDF, periodsToPredict):
   for x in range(periodsToPredict):
     closeList.pop(len(closeList)-1)
 
-  stockDF.drop("close", axis = 1, inplace = True)
+  #stockDF.drop("close", axis = 1, inplace = True)
 
   stockDF.insert(0,"Future Close", closeList ,True)
 
@@ -186,7 +186,7 @@ def shiftClosePriceForFuture(stockDF, periodsToPredict):
 def fixStockDataFrame(stockDF):
   stockDF.drop([i for i in range(26)], 0, inplace = True) 
 
-  stockDF = stockDF[["Future Close", "RSI", "ROC", "MACD", "Money Flow Index"]]
+  stockDF = stockDF[["Future Close", "close", "RSI", "ROC", "MACD", "Money Flow Index"]]
   
   return stockDF
 
