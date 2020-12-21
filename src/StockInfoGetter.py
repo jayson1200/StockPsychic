@@ -3,15 +3,16 @@ import pandas as pd
 from requests.models import HTTPError
 
 
-#Get the data in CSV format
+# I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF //TD Ameritrade
+# OH4XYOJUKWRL7ERG //Vantage
 
-# I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF
+#might want to add volatility
 
 #Gets the stock historical data and returns a dataframe
 def getStockInfo(**kwargs):
     try:
       response = requests.get(
-        "https://api.tdameritrade.com/v1/marketdata/{}/pricehistory?apikey={}&periodType={}&period={}&frequencyType={}"
+        "https://api.tdameritrade.com/v1/marketdata/{}/pricehistory?apikey={}&periodType={}&period={}&frequencyType={}&needExtendedHoursData=true"
           .format(kwargs.get("ticker"), kwargs.get("apiKey"), kwargs.get("periodType"), kwargs.get("period"), kwargs.get("frequencyType")))
 
     except HTTPError:
@@ -28,14 +29,12 @@ def getStockInfo(**kwargs):
 
     
     stockInfoDF = pd.DataFrame(dataCandleList)
-    #print(stockInfoDF)
 
     return stockInfoDF
 
 
 # Calculates the RSI change data
 def calculateRSIData(stockDF):
-  #print(stockDF)
 
   upChangeList = [] 
   downChangeList = []
@@ -176,8 +175,6 @@ def shiftClosePriceForFuture(stockDF, periodsToPredict):
   
   for x in range(periodsToPredict):
     closeList.pop(len(closeList)-1)
-
-  #stockDF.drop("close", axis = 1, inplace = True)
 
   stockDF.insert(0,"Future Close", closeList ,True)
 

@@ -6,12 +6,14 @@ import pandas as pd
 import sklearn
 from sklearn import linear_model
 import numpy as np
+from multipledispatch import dispatch
 
 class Stockmodel:
 
     """Used to make and run the model"""
 
     # Asks the user for the initial paramters. Gets the information based on those parameters and trains the model
+    @dispatch(str)
     def __init__(self, modelFileName):
 
         self.modelFileName = modelFileName
@@ -64,7 +66,58 @@ class Stockmodel:
                 with open(str(self.modelFileName + ".pickle"), "wb") as f:
                     pickle.dump(stockModel, f)
 
-   
+    @dispatch(str, str, str, int, str, int, str)
+    def __init__(self, apiKey, ticker, periodType, period, frequencyType, futureOffset, modelFileName):
+
+        self.modelFileName = modelFileName
+        self.stockInfoDF = DataFrame()
+        self.acc = 0
+
+
+        self.params = {
+        "apiKey": apiKey, 
+        "ticker" : ticker, 
+        "periodType" : periodType, 
+        "period" : period, 
+        "frequencyType" : frequencyType,
+
+        # I train the model based on how far the user wants to predict
+        "futureOffset" : futureOffset
+        }
+
+        self.stockInfoDF = StockInfoGetter.getStockInfo(apiKey=self.params["apiKey"], ticker= self.params["ticker"], periodType = self.params["periodType"], period = self.params["period"], frequencyType = self.params["frequencyType"])
+        self.stockInfoDF = StockInfoGetter.calculateRSIData(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.calculateROC(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.calculateEMA(self.stockInfoDF, 26)
+        self.stockInfoDF = StockInfoGetter.calculateEMA(self.stockInfoDF, 12)
+        self.stockInfoDF = StockInfoGetter.calculateMACD(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.calculateTypicalPrice(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.calculateRawMoneyFlow(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.calculateMoneyFlowIndex(self.stockInfoDF)
+        self.stockInfoDF = StockInfoGetter.shiftClosePriceForFuture(self.stockInfoDF, self.params["futureOffset"]) 
+        self.stockInfoDF = StockInfoGetter.fixStockDataFrame(self.stockInfoDF)
+    
+        X = np.array(self.stockInfoDF.drop("Future Close", axis = 1))
+        y = np.array(self.stockInfoDF["Future Close"])
+
+        
+
+        currentHighestAcc = 0
+        x_train, x_test,  y_train,  y_test = sklearn.model_selection.train_test_split(X, y, test_size  = 0.2)
+
+        for x in range(10):
+            x_train, x_test,  y_train,  y_test = sklearn.model_selection.train_test_split(X, y, test_size  = 0.2)
+
+            stockModel = linear_model.LinearRegression()
+
+            stockModel.fit(x_train, y_train)
+
+            self.acc = stockModel.score(x_test, y_test)
+            
+            if(self.acc > currentHighestAcc):
+                currentHighestAcc = self.acc
+                with open(str(self.modelFileName + ".pickle"), "wb") as f:
+                    pickle.dump(stockModel, f)
     
     # Updates and retrains the model based on new data that might have changed
     def updateModel(self):
@@ -122,5 +175,9 @@ class Stockmodel:
     def printDataFrame(self):
         print(self.stockInfoDF)
 
+    # Prints the accuracy
     def printAccuracy(self):
         print("The model's self.accuracy is %s" %  self.acc)
+
+    def getTicker(self):
+        return self.params["ticker"]
