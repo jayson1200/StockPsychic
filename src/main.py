@@ -4,11 +4,14 @@ import pandas as pd
 import sklearn
 from sklearn import linear_model
 import numpy as np
+from TrailingStopManager import TrailStopManager
 from stockmodel import Stockmodel
 from StockObj import StockObject
 import requests
 from requests.models import HTTPError
 import time
+from Portfolio import Portfolio
+from TrailingStopManager import TrailStopManager
 
 def main():
     intradayTrading()
@@ -55,7 +58,7 @@ def main():
 
 """securitiesToLookAt = [StockObject("SPXU"), StockObject("SQQQ"), StockObject("SDOW"), StockObject("UPRO"), StockObject("TQQQ"), 
                           StockObject("UDOW"), StockObject("DFEN"), StockObject("WEBS"), StockObject("FAZ"), StockObject("WANT"),
-                          StockObject("UGLD"), StockObject("DGLD"), StockObject("USLV"), StockObject("DSLV"), StockObject("UGAZ"),  
+                          StockObject("UGLD"), StockObject("DGLD"), StockObject("USLV"), StockObject("DSLV"),  
                           StockObject("WEBL"), StockObject("FAS"), StockObject("CURE"), StockObject("NAIL"), StockObject("DUSL"),
                           StockObject("DRV"), StockObject("DRN"), StockObject("PILL"), StockObject("DPST"), StockObject("RETL"),
                           StockObject("HIBS"), StockObject("HIBL"), StockObject("LABD"), StockObject("LABU"), StockObject("SOXS"),
@@ -64,7 +67,7 @@ def main():
 def intradayTrading():
     
     securitiesToLookAt = [StockObject("SQQQ"), StockObject("UPRO"), StockObject("TQQQ"), 
-                          StockObject("WEBS"), StockObject("UGAZ"), StockObject("WEBL"), 
+                          StockObject("WEBS"), StockObject("DRN"), StockObject("WEBL"), 
                           StockObject("CURE"), StockObject("HIBS"), StockObject("HIBL"),
                           StockObject("TECS"), StockObject("TECL")]
 
@@ -78,16 +81,16 @@ def intradayTrading():
     tdApiKey = "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF"
     advApiKey = "OH4XYOJUKWRL7ERG"
 
-    amountOfMoney = 2000
-
-    runOnce = True
-    # I need to decide how many shares to buy and I also need to add a trailing stop loss
-    while(runOnce):
+    portfolio = Portfolio(2000)
+   
+    while(True):
 
 
         # Makes a model for the ticker symbol in each of the objects in the securitiesToLookAt list and assigns a predicted value inside each StockObject
         for i in range(len(securitiesToLookAt)):
-            
+
+            print("Looking at %s" % securitiesToLookAt[i].getTicker())
+
             objModel = Stockmodel(tdApiKey, securitiesToLookAt[i].getTicker(), intradayTradingParams["periodType"], intradayTradingParams["period"], 
             intradayTradingParams["frequencyType"], intradayTradingParams["futureOffset"], securitiesToLookAt[i].getTicker())
 
@@ -107,33 +110,37 @@ def intradayTrading():
                 close = requests.get(closeUrl).json()[securitiesToLookAt[i].getTicker()]["closePrice"]
 
                 rsiDictVals = requests.get(rsiUrl).json()["Technical Analysis: RSI"]
-                rsi = rsiDictVals[rsiDictVals.keys()[0]]["RSI"]
+                rsi = float(rsiDictVals[list(rsiDictVals.keys())[0]]["RSI"])
 
                 rocDictVals = requests.get(rocUrl).json()["Technical Analysis: ROC"]
-                roc = rocDictVals[rocDictVals.keys()[0]]["ROC"]
+                roc = float(rocDictVals[list(rocDictVals.keys())[0]]["ROC"])
 
                 macdDictVals = requests.get(macdUrl).json()["Technical Analysis: MACD"]
-                macd = macdDictVals[macdDictVals.keys()[0]]["MACD"]
+                macd = float(macdDictVals[list(macdDictVals.keys())[0]]["MACD"])
 
                 mfiDictVals = requests.get(mfiUrl).json()["Technical Analysis: MFI"]
-                mfi = mfiDictVals[mfiDictVals.keys()[0]]["MFI"]
+                mfi = float(mfiDictVals[list(mfiDictVals.keys())[0]]["MFI"])
 
             except HTTPError:
                 print("We don't have your info")
-            except Exception:
-                print("Something Happened")
-    
-            securitiesToLookAt[i].setPredictedChange(     (objModel.predict(close, rsi, roc, macd, mfi) - close)/close   )   
+            """except Exception:
+                print("Something Happened")"""
 
-            time.sleep(60000)
-
+            print((close, rsi, roc, macd, mfi))
+            thePredictedChange = objModel.predict(close, rsi, roc, macd, mfi)
+            print(thePredictedChange)
+            securitiesToLookAt[i].setPredictedChange((thePredictedChange - close)/close)   
+            print("sleeping")
+            time.sleep(60)
+            print("Woke Up")
         bestStockModel = StockObject("L")
 
         # Loops through all of the stocks to see which one has the best upside potential
         for i in range(len(securitiesToLookAt)):
-            if bestStockModel.getPredictedChange() < securitiesToLookAt[i].getPredictedChange:
+            if bestStockModel.getPredictedChange() < securitiesToLookAt[i].getPredictedChange():
                 bestStockModel = securitiesToLookAt[i]
 
+        print("%s is the best ETF" % bestStockModel.getTicker())
 
         saleClose = 0
         holdingStock = False
@@ -148,22 +155,25 @@ def intradayTrading():
 
             try:
                 saleClose = requests.get(closeUrl).json()[bestStockModel.getTicker()]["closePrice"]
+                print("Bought a stock for %s" % saleClose)
             except HTTPError:
                 print("We don't have your info")
             except Exception:
                 print("Something Happened")
 
-            amountOfMoney -= saleClose
+            portfolio.makePosition(bestStockModel.getTicker(), saleClose, runSugStrat = True)
         else:
+            print("No sufficient buy oppurtunity")
             continue
         
+        stockSellMng = TrailStopManager(saleClose, 0.03, 0.0125)
+
         # Waits for the optimal oppurtunity to sell 
         while holdingStock:
-            time.sleep(300000)
-
-            currentClose = 0
+            time.sleep(30)
 
             closeUrl = "https://api.tdameritrade.com/v1/marketdata/"+ bestStockModel.getTicker() +"/quotes?apikey="+tdApiKey
+            currentClose = 0
 
             try:
                 currentClose = requests.get(closeUrl).json()[bestStockModel.getTicker()]["closePrice"]
@@ -171,23 +181,15 @@ def intradayTrading():
                 print("We don't have your info")
             except Exception:
                 print("Something Happened")
-
-            amountOfMoney -= saleClose
             
-            percentChange = ((currentClose - saleClose) / saleClose)
-
-            if (percentChange >= 0.02) or (percentChange <= 0.03):
-                amountOfMoney += currentClose
+            if (stockSellMng.shouldSell(currentClose)):
+                portfolio.closePosition(bestStockModel.getTicker(), currentClose)
                 holdingStock = False
+                print("Sold")
 
-        print(amountOfMoney)
-        runOnce = False
+        print(portfolio.getAmtMoney())
+        
             
-
-
-
-
-
 
 def runTest():
 
