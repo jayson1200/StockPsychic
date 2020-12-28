@@ -82,13 +82,17 @@ def intradayTrading():
     advApiKey = "OH4XYOJUKWRL7ERG"
 
     portfolio = Portfolio(2000)
-   
+    
+    
+
     while(True):
 
+        if(not isMarketOpen):
+            pauseAlgo
 
         # Makes a model for the ticker symbol in each of the objects in the securitiesToLookAt list and assigns a predicted value inside each StockObject
         for i in range(len(securitiesToLookAt)):
-
+                
             print("Looking at %s" % securitiesToLookAt[i].getTicker())
 
             objModel = Stockmodel(tdApiKey, securitiesToLookAt[i].getTicker(), intradayTradingParams["periodType"], intradayTradingParams["period"], 
@@ -135,6 +139,10 @@ def intradayTrading():
             print("Woke Up")
         bestStockModel = StockObject("L")
 
+        if(not isMarketOpen):
+            pauseAlgo
+            continue
+
         # Loops through all of the stocks to see which one has the best upside potential
         for i in range(len(securitiesToLookAt)):
             if bestStockModel.getPredictedChange() < securitiesToLookAt[i].getPredictedChange():
@@ -144,6 +152,10 @@ def intradayTrading():
 
         saleClose = 0
         holdingStock = False
+
+        if(not isMarketOpen):
+            pauseAlgo
+            continue
         
         # If the best prediction gives a profit of 2% it will buy the stock
         # Else it will stop the loop and start making new stock models
@@ -168,6 +180,10 @@ def intradayTrading():
         
         stockSellMng = TrailStopManager(saleClose, 0.03, 0.0125)
 
+        if(not isMarketOpen):
+            pauseAlgo
+            continue
+
         # Waits for the optimal oppurtunity to sell 
         while holdingStock:
             time.sleep(30)
@@ -188,8 +204,30 @@ def intradayTrading():
                 print("Sold")
 
         print(portfolio.getAmtMoney())
+
+        if(not isMarketOpen):
+            pauseAlgo
+            continue
         
-            
+
+def isMarketOpen(self):
+    url = "https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF"
+    isOpen = None
+
+    try:
+        response = requests.get("https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF").json()
+        isOpen = response["equity"]["EQ"]["isOpen"]
+    except HTTPError:
+        print("We don't have your info")
+    except Exception:
+        print("Something Happened")
+
+    return isOpen
+
+def pauseAlgo():
+
+    while(not isMarketOpen):
+        pass
 
 def runTest():
 
