@@ -87,8 +87,8 @@ def intradayTrading():
 
     while(True):
 
-        if(not isMarketOpen):
-            pauseAlgo
+        if(isMarketOpen()):
+            pauseAlgo()
 
         # Makes a model for the ticker symbol in each of the objects in the securitiesToLookAt list and assigns a predicted value inside each StockObject
         for i in range(len(securitiesToLookAt)):
@@ -139,8 +139,8 @@ def intradayTrading():
             print("Woke Up")
         bestStockModel = StockObject("L")
 
-        if(not isMarketOpen):
-            pauseAlgo
+        if(isMarketOpen()):
+            pauseAlgo()
             continue
 
         # Loops through all of the stocks to see which one has the best upside potential
@@ -153,8 +153,8 @@ def intradayTrading():
         saleClose = 0
         holdingStock = False
 
-        if(not isMarketOpen):
-            pauseAlgo
+        if(isMarketOpen()):
+            pauseAlgo()
             continue
         
         # If the best prediction gives a profit of 2% it will buy the stock
@@ -180,8 +180,8 @@ def intradayTrading():
         
         stockSellMng = TrailStopManager(saleClose, 0.03, 0.0125)
 
-        if(not isMarketOpen):
-            pauseAlgo
+        if(isMarketOpen()):
+            pauseAlgo()
             continue
 
         # Waits for the optimal oppurtunity to sell 
@@ -205,29 +205,31 @@ def intradayTrading():
 
         print(portfolio.getAmtMoney())
 
-        if(not isMarketOpen):
-            pauseAlgo
+        if(isMarketOpen()):
+            pauseAlgo()
             continue
         
 
-def isMarketOpen(self):
+def isMarketOpen():
     url = "https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF"
     isOpen = None
 
     try:
         response = requests.get("https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF").json()
         isOpen = response["equity"]["EQ"]["isOpen"]
+        
     except HTTPError:
         print("We don't have your info")
     except Exception:
         print("Something Happened")
+    
 
     return isOpen
 
 def pauseAlgo():
 
-    while(not isMarketOpen):
-        pass
+    while(isMarketOpen()):
+        time.sleep(20)
 
 def runTest():
 
