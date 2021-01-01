@@ -8,12 +8,14 @@ class Portfolio:
 
     def makePosition(self, ticker, sharePrice, **kwargs):
         
+        amtOfShares = 0
+
         if kwargs.get("runSugStrat") == True:
-            amtOfShares = int((self.amtMonet/2) / sharePrice)
+            amtOfShares = int((self.amtMoney/2) / sharePrice)
         else:
             amtOfShares = kwargs.get("sharesToBuy")
 
-        self.amtMoney -= self.amtOfShares * sharePrice
+        self.amtMoney -= amtOfShares * sharePrice
 
         self.positions[ticker] = amtOfShares
 

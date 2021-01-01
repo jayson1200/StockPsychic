@@ -69,7 +69,7 @@ def intradayTrading():
     securitiesToLookAt = [StockObject("SQQQ"), StockObject("UPRO"), StockObject("TQQQ"), 
                           StockObject("WEBS"), StockObject("DRN"), StockObject("WEBL"), 
                           StockObject("CURE"), StockObject("HIBS"), StockObject("HIBL"),
-                          StockObject("TECS"), StockObject("TECL")]
+                          StockObject("TECS"), StockObject("TECL")] 
 
     intradayTradingParams = { 
         "periodType" : "day", 
@@ -87,7 +87,7 @@ def intradayTrading():
 
     while(True):
 
-        if(isMarketOpen()):
+        if(not isMarketOpen()):
             pauseAlgo()
 
         # Makes a model for the ticker symbol in each of the objects in the securitiesToLookAt list and assigns a predicted value inside each StockObject
@@ -127,8 +127,6 @@ def intradayTrading():
 
             except HTTPError:
                 print("We don't have your info")
-            """except Exception:
-                print("Something Happened")"""
 
             print((close, rsi, roc, macd, mfi))
             thePredictedChange = objModel.predict(close, rsi, roc, macd, mfi)
@@ -139,7 +137,7 @@ def intradayTrading():
             print("Woke Up")
         bestStockModel = StockObject("L")
 
-        if(isMarketOpen()):
+        if(not isMarketOpen()):
             pauseAlgo()
             continue
 
@@ -153,7 +151,7 @@ def intradayTrading():
         saleClose = 0
         holdingStock = False
 
-        if(isMarketOpen()):
+        if(not isMarketOpen()):
             pauseAlgo()
             continue
         
@@ -178,9 +176,9 @@ def intradayTrading():
             print("No sufficient buy oppurtunity")
             continue
         
-        stockSellMng = TrailStopManager(saleClose, 0.03, 0.0125)
+        stockSellMng = TrailStopManager(saleClose, 0.005, 0.0005) # 0.02 for stopLoss 0.0025 for trailstopLoss
 
-        if(isMarketOpen()):
+        if(not isMarketOpen()):
             pauseAlgo()
             continue
 
@@ -190,13 +188,16 @@ def intradayTrading():
 
             closeUrl = "https://api.tdameritrade.com/v1/marketdata/"+ bestStockModel.getTicker() +"/quotes?apikey="+tdApiKey
             currentClose = 0
+            debug = {}
 
             try:
-                currentClose = requests.get(closeUrl).json()[bestStockModel.getTicker()]["closePrice"]
+                debug = requests.get(closeUrl).json()
+                currentClose = debug[bestStockModel.getTicker()]["closePrice"]
+
             except HTTPError:
                 print("We don't have your info")
-            except Exception:
-                print("Something Happened")
+            except KeyError:
+                print(debug)
             
             if (stockSellMng.shouldSell(currentClose)):
                 portfolio.closePosition(bestStockModel.getTicker(), currentClose)
@@ -205,7 +206,7 @@ def intradayTrading():
 
         print(portfolio.getAmtMoney())
 
-        if(isMarketOpen()):
+        if(not isMarketOpen()):
             pauseAlgo()
             continue
         
@@ -220,15 +221,13 @@ def isMarketOpen():
         
     except HTTPError:
         print("We don't have your info")
-    except Exception:
-        print("Something Happened")
     
 
     return isOpen
 
 def pauseAlgo():
 
-    while(isMarketOpen()):
+    while(not isMarketOpen()):
         time.sleep(20)
 
 def runTest():
