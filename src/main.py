@@ -10,6 +10,7 @@ from StockObj import StockObject
 import requests
 from requests.models import HTTPError
 import time
+import os
 from Portfolio import Portfolio
 from TrailingStopManager import TrailStopManager
 
@@ -78,7 +79,7 @@ def intradayTrading():
         "futureOffset" : 360 # 6 hours
     }
 
-    tdApiKey = "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF"
+    tdApiKey = os.environ.get("TDAPIKEY")
     advApiKey = "OH4XYOJUKWRL7ERG"
 
     portfolio = Portfolio(2000)
@@ -212,11 +213,11 @@ def intradayTrading():
         
 
 def isMarketOpen():
-    url = "https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF"
+    url = "https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=" + tdApiKey
     isOpen = None
 
     try:
-        response = requests.get("https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF").json()
+        response = requests.get("https://api.tdameritrade.com/v1/marketdata/EQUITY/hours?apikey=" + tdApiKey).json()
         isOpen = response["equity"]["EQ"]["isOpen"]
         
     except HTTPError:
@@ -233,7 +234,7 @@ def pauseAlgo():
 def runTest():
 
     params = {
-        "apiKey": "I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF",
+        "apiKey": tdApiKey,
         "ticker" : "AAPL",
         "periodType" : "year",
         "period" : 20,
