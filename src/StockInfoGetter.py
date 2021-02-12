@@ -3,9 +3,6 @@ import pandas as pd
 from requests.models import HTTPError
 
 
-# I4WJTVFRTTZ7AUWEGIKYMPSKSUPXAKCF //TD Ameritrade
-# OH4XYOJUKWRL7ERG //Vantage
-
 #might want to add volatility
 
 #Gets the stock historical data and returns a dataframe
